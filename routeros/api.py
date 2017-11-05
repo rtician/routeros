@@ -53,8 +53,8 @@ class APIUtils:
         """
         Decode length based on given bytes.
 
-        :param length: Bytes string to decode.
-        :return: Decoded length.
+        :param length: bytes string to decode.
+        :return: decoded length.
         """
         if length < 0x80:
             new_length = length
@@ -77,8 +77,8 @@ class APIUtils:
         """
         Decode length based on given bytes.
 
-        :param bytes: Bytes string to decode.
-        :return: Decoded length.
+        :param bytes: bytes string to decode.
+        :return: decoded length.
         """
         length = len(bytes)
         if length < 2:
@@ -99,3 +99,28 @@ class APIUtils:
         decoded = unpack('!I', (offset + bytes))[0]
         decoded ^= xor
         return decoded
+
+    def encode_word(self, encoding, word):
+        """
+        Encode word in API format.
+
+        :param word: Word to encode.
+        :param encoding: encoding type.
+        :return: encoded word.
+        """
+        encoded_word = word.encode(encoding=encoding, errors='strict')
+        return self.encode_length(len(word)) + encoded_word
+
+    def encode_sentence(self, encoding, *words):
+        """
+        Encode given sentence in API format.
+
+        :param words: Words to encode.
+        :param encoding: encoding type.
+        :returns: Encoded sentence.
+        """
+        encoded = [self.encode_word(encoding, word) for word in words]
+        encoded = b''.join(encoded)
+        # append EOS (end of sentence) byte
+        encoded += b'\x00'
+        return encoded
