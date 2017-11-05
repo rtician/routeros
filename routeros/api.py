@@ -47,9 +47,15 @@ class Socket:
             self.sock.close()
 
 
-class LengthUtils:
+class APIUtils:
     @staticmethod
     def encode_length(length):
+        """
+        Decode length based on given bytes.
+
+        :param length: Bytes string to decode.
+        :return: Decoded length.
+        """
         if length < 0x80:
             new_length = length
             offset = -1
@@ -68,6 +74,12 @@ class LengthUtils:
 
     @staticmethod
     def decode_bytes(bytes):
+        """
+        Decode length based on given bytes.
+
+        :param bytes: Bytes string to decode.
+        :return: Decoded length.
+        """
         length = len(bytes)
         if length < 2:
             offset = b'\x00\x00\x00'

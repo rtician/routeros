@@ -3,7 +3,7 @@ from unittest.mock import Mock
 from collections import namedtuple
 from socket import SHUT_RDWR, error as SOCKET_ERROR
 
-from routeros.api import Socket, LengthUtils
+from routeros.api import Socket, APIUtils
 from routeros.exc import ConnectionError
 
 
@@ -51,8 +51,8 @@ class TestSocket(unittest.TestCase):
 
 class TestLengthUtils(unittest.TestCase):
     def setUp(self):
-        self.encoder = LengthUtils.encode_length
-        self.decoder = LengthUtils.decode_bytes
+        self.encoder = APIUtils.encode_length
+        self.decoder = APIUtils.decode_bytes
 
         lengths = namedtuple('lengths', ('integer', 'encoded'))
         self.valid_lengths = [
