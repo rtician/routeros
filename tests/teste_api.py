@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 from collections import namedtuple
 from socket import SHUT_RDWR, error as SOCKET_ERROR
 
@@ -86,3 +86,35 @@ class TestLengthUtils(unittest.TestCase):
 
         with self.assertRaises(ConnectionError):
             self.decoder(invalid_bytes)
+
+
+class TestWordUtils(unittest.TestCase):
+    def setUp(self):
+        self.encoder = APIUtils().encode_word
+
+    def test_encode_word(self):
+        with patch('routeros.api.APIUtils.encode_length', return_value=b'len_') as encoder:
+            self.assertEqual(self.encoder('ASCII', 'word'), b'len_word')
+            self.assertEqual(encoder.call_count, 1)
+
+    def test_non_ASCII_word_encoding(self):
+        # Word may only contain ASCII characters.
+        word = b'\xc5\x82\xc4\x85'.decode('utf-8')
+        with self.assertRaises(UnicodeEncodeError):
+            self.encoder('ASCII', word)
+
+    def test_utf_8_word_encoding(self):
+        # Assert that utf-8 encoding works.
+        expected_bytes = b'\x02\xc5\x82\xc4\x85'
+        self.assertEqual(self.encoder('utf-8', 'łą'), expected_bytes)
+
+
+class TestSentenceUtils(unittest.TestCase):
+    def setUp(self):
+        self.encoder = APIUtils().encode_sentence
+
+    def test_encode_sentence(self):
+        with patch('routeros.api.APIUtils.encode_word', return_value=b'') as encoder:
+            encoded = self.encoder('ASCII', 'first', 'second')
+            self.assertEqual(encoder.call_count, 2)
+            self.assertEqual(encoded[-1:], b'\x00')
