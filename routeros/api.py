@@ -1,7 +1,7 @@
 from socket import SHUT_RDWR, error as SOCKET_ERROR
 from struct import pack, unpack
 
-from routeros.exc import ConnectionError
+from routeros.exc import ConnectionError, FatalError
 
 
 class Socket:
@@ -164,3 +164,47 @@ class APIUtils:
             words.append(sentence[end:word_length+end])
             start, end = end + word_length, end + word_length + 1
         return tuple(word.decode(encoding=encoding, errors='strict') for word in words)
+    
+
+class API(APIUtils):
+    def __init__(self, transport, encoding):
+        self.transport = transport
+        self.encoding = encoding
+
+    def write_sentence(self, command, *words):
+        """
+        Write encoded sentence.
+
+        :param command: Command word.
+        :param words: Parameter words.
+        """
+        encoded = self.encode_sentence(command, *words)
+        self.transport.write(encoded)
+
+    def read_sentence(self):
+        """
+        Read every word until empty word (NULL byte) is received.
+
+        :return: Reply word, tuple with read words.
+        """
+        sentence = tuple(word for word in iter(self.read_word, None))
+        reply_word, words = sentence[0], sentence[1:]
+        if reply_word == '!fatal':
+            self.transport.close()
+            raise FatalError(words[0])
+        else:
+            return reply_word, words
+
+    def read_word(self):
+        bytes = self.transport.read(1)
+        read = self.determine_length(bytes)
+        if read:
+            bytes += self.transport.read(read)
+
+        bytes = self.decode_bytes(bytes)
+        if not bytes:
+            return
+        return self.transport.read(bytes).decode(encoding=self.encoding, errors='strict')
+
+    def close(self):
+        self.transport.close()

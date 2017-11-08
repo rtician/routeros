@@ -4,8 +4,8 @@ from collections import namedtuple
 from struct import pack
 from socket import SHUT_RDWR, error as SOCKET_ERROR
 
-from routeros.api import Socket, APIUtils
-from routeros.exc import ConnectionError
+from routeros.api import Socket, API, APIUtils
+from routeros.exc import ConnectionError, FatalError
 
 
 class TestSocket(unittest.TestCase):
@@ -156,3 +156,29 @@ class TestSentenceUtils(unittest.TestCase):
         self.assertEqual(self.decoder('utf-8', sentence),
                          ('/ip/addresł/print', 'first', 'second'))
 
+
+class TestAPI(unittest.TestCase):
+    def setUp(self):
+        self.api = API(transport=Mock(spec=Socket), encoding='ASCII')
+
+    def test_write_sentence_calls_encode_sentence(self):
+        with patch('routeros.api.APIUtils.encode_sentence') as encoder:
+            self.api.write_sentence('/ip/address/print', '=key=value')
+            encoder.assert_called_once_with('/ip/address/print', '=key=value')
+
+    def test_write_sentence_calls_transport_write(self):
+        # Assert that write is called with encoded sentence.
+        with patch('routeros.api.APIUtils.encode_sentence') as encoder:
+            self.api.write_sentence('/ip/address/print', '=key=value')
+            self.api.transport.write.assert_called_once_with(encoder.return_value)
+
+    def test_readSentence_raises_FatalError(self):
+        # Assert that FatalError is raised with its reason.
+        with patch('routeros.api.iter', return_value=('!fatal', 'reason')):
+            with self.assertRaises(FatalError):
+                self.api.read_sentence()
+            self.assertEqual(self.api.transport.close.call_count, 1)
+
+    def test_close(self):
+        self.api.close()
+        self.api.transport.close.assert_called_once_with()
