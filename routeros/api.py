@@ -72,6 +72,31 @@ class APIUtils:
             raise ConnectionError('Unable to encode length of {}'.format(length))
         return pack('!I', new_length)[offset:]
 
+    def encode_word(self, encoding, word):
+        """
+        Encode word in API format.
+
+        :param word: Word to encode.
+        :param encoding: encoding type.
+        :return: encoded word.
+        """
+        encoded_word = word.encode(encoding=encoding, errors='strict')
+        return self.encode_length(len(word)) + encoded_word
+
+    def encode_sentence(self, encoding, *words):
+        """
+        Encode given sentence in API format.
+
+        :param words: Words to encode.
+        :param encoding: encoding type.
+        :returns: Encoded sentence.
+        """
+        encoded = [self.encode_word(encoding, word) for word in words]
+        encoded = b''.join(encoded)
+        # append EOS (end of sentence) byte
+        encoded += b'\x00'
+        return encoded
+
     @staticmethod
     def decode_bytes(bytes):
         """
@@ -100,27 +125,42 @@ class APIUtils:
         decoded ^= xor
         return decoded
 
-    def encode_word(self, encoding, word):
+    @staticmethod
+    def determine_length(length):
         """
-        Encode word in API format.
+        Given first read byte, determine how many more bytes
+        needs to be known in order to get fully encoded length.
 
-        :param word: Word to encode.
+        :param length: first read byte.
+        :return: how many bytes to read.
+        """
+        integer = ord(length)
+
+        if integer < 128:
+            return 0
+        elif integer < 192:
+            return 1
+        elif integer < 224:
+            return 2
+        elif integer < 240:
+            return 3
+        else:
+            raise ConnectionError('Unknown controll byte {}'.format(length))
+
+    def decode_sentence(self, encoding, sentence):
+        """
+        Decode given sentence.
+
+
         :param encoding: encoding type.
-        :return: encoded word.
+        :param sentence: bytes string with sentence (without ending \x00 EOS byte).
+        :return: tuple with decoded words.
         """
-        encoded_word = word.encode(encoding=encoding, errors='strict')
-        return self.encode_length(len(word)) + encoded_word
-
-    def encode_sentence(self, encoding, *words):
-        """
-        Encode given sentence in API format.
-
-        :param words: Words to encode.
-        :param encoding: encoding type.
-        :returns: Encoded sentence.
-        """
-        encoded = [self.encode_word(encoding, word) for word in words]
-        encoded = b''.join(encoded)
-        # append EOS (end of sentence) byte
-        encoded += b'\x00'
-        return encoded
+        words = []
+        start, end = 0, 1
+        while end < len(sentence):
+            end += self.determine_length(sentence[start:end])
+            word_length = self.decode_bytes(sentence[start:end])
+            words.append(sentence[end:word_length+end])
+            start, end = end + word_length, end + word_length + 1
+        return tuple(word.decode(encoding=encoding, errors='strict') for word in words)

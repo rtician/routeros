@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import Mock, patch
 from collections import namedtuple
+from struct import pack
 from socket import SHUT_RDWR, error as SOCKET_ERROR
 
 from routeros.api import Socket, APIUtils
@@ -53,6 +54,7 @@ class TestLengthUtils(unittest.TestCase):
     def setUp(self):
         self.encoder = APIUtils.encode_length
         self.decoder = APIUtils.decode_bytes
+        self.determine_length = APIUtils.determine_length
 
         lengths = namedtuple('lengths', ('integer', 'encoded'))
         self.valid_lengths = [
@@ -75,17 +77,34 @@ class TestLengthUtils(unittest.TestCase):
         with self.assertRaises(ConnectionError):
             self.encoder(invalid_length)
 
-    def test_decodeLength(self):
+    def test_decode_length(self):
         for valid_length in self.valid_lengths:
             result = self.decoder(valid_length.encoded)
             self.assertEqual(result, valid_length.integer)
 
-    def test_decodeLength_raises(self):
+    def test_decode_length_raises(self):
         # len(length) must be < 5
-        invalid_bytes =b'\xff\xff\xff\xff\xff'
+        invalid_bytes = b'\xff\xff\xff\xff\xff'
 
         with self.assertRaises(ConnectionError):
             self.decoder(invalid_bytes)
+
+    def test_determine_length(self):
+        bytes = [
+            (b'x', 0),  # 120
+            (b'\xbf', 1),  # 191
+            (b'\xdf', 2),  # 223
+            (b'\xef', 3),  # 239
+        ]
+        for length, expected in bytes:
+            self.assertEqual(self.determine_length(length), expected)
+
+    def test_determine_length_raises(self):
+        # First byte of length must be < 240.
+        invalid_lengths = (pack('>B', i) for i in range(240, 256))
+        for invalid_length in invalid_lengths:
+            with self.assertRaises(ConnectionError):
+                self.determine_length(invalid_length)
 
 
 class TestWordUtils(unittest.TestCase):
@@ -112,9 +131,28 @@ class TestWordUtils(unittest.TestCase):
 class TestSentenceUtils(unittest.TestCase):
     def setUp(self):
         self.encoder = APIUtils().encode_sentence
+        self.decoder = APIUtils().decode_sentence
 
     def test_encode_sentence(self):
         with patch('routeros.api.APIUtils.encode_word', return_value=b'') as encoder:
             encoded = self.encoder('ASCII', 'first', 'second')
             self.assertEqual(encoder.call_count, 2)
             self.assertEqual(encoded[-1:], b'\x00')
+
+    def test_decode_sentence(self):
+        sentence = b'\x11/ip/address/print\x05first\x06second'
+        expected = ('/ip/address/print', 'first', 'second')
+        self.assertEqual(self.decoder('ASCII', sentence), expected)
+
+    def test_decode_sentence_non_ASCII(self):
+        # Word may only contain ASCII characters.
+        sentence = b'\x12/ip/addres\xc5\x82/print\x05first\x06second'
+        with self.assertRaises(UnicodeDecodeError):
+            self.decoder('ASCII', sentence)
+
+    def test_decode_sentence_utf_8(self):
+        # Assert that utf-8 encoding works.
+        sentence = b'\x12/ip/addres\xc5\x82/print\x05first\x06second'
+        self.assertEqual(self.decoder('utf-8', sentence),
+                         ('/ip/addresł/print', 'first', 'second'))
+
