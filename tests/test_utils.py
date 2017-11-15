@@ -4,7 +4,7 @@ from collections import namedtuple
 from struct import pack
 from socket import SHUT_RDWR, error as SOCKET_ERROR
 
-from routeros.api import Socket, API, APIUtils
+from routeros.utils import Socket, API, APIUtils
 from routeros.exc import ConnectionError, FatalError
 
 
@@ -112,7 +112,7 @@ class TestWordUtils(unittest.TestCase):
         self.encoder = APIUtils().encode_word
 
     def test_encode_word(self):
-        with patch('routeros.api.APIUtils.encode_length', return_value=b'len_') as encoder:
+        with patch('routeros.utils.APIUtils.encode_length', return_value=b'len_') as encoder:
             self.assertEqual(self.encoder('ASCII', 'word'), b'len_word')
             self.assertEqual(encoder.call_count, 1)
 
@@ -134,7 +134,7 @@ class TestSentenceUtils(unittest.TestCase):
         self.decoder = APIUtils().decode_sentence
 
     def test_encode_sentence(self):
-        with patch('routeros.api.APIUtils.encode_word', return_value=b'') as encoder:
+        with patch('routeros.utils.APIUtils.encode_word', return_value=b'') as encoder:
             encoded = self.encoder('ASCII', 'first', 'second')
             self.assertEqual(encoder.call_count, 2)
             self.assertEqual(encoded[-1:], b'\x00')
@@ -162,19 +162,19 @@ class TestAPI(unittest.TestCase):
         self.api = API(transport=Mock(spec=Socket), encoding='ASCII')
 
     def test_write_sentence_calls_encode_sentence(self):
-        with patch('routeros.api.APIUtils.encode_sentence') as encoder:
+        with patch('routeros.utils.APIUtils.encode_sentence') as encoder:
             self.api.write_sentence('/ip/address/print', '=key=value')
-            encoder.assert_called_once_with('/ip/address/print', '=key=value')
+            encoder.assert_called_once_with('ASCII', '/ip/address/print', '=key=value')
 
     def test_write_sentence_calls_transport_write(self):
         # Assert that write is called with encoded sentence.
-        with patch('routeros.api.APIUtils.encode_sentence') as encoder:
+        with patch('routeros.utils.APIUtils.encode_sentence') as encoder:
             self.api.write_sentence('/ip/address/print', '=key=value')
             self.api.transport.write.assert_called_once_with(encoder.return_value)
 
     def test_readSentence_raises_FatalError(self):
         # Assert that FatalError is raised with its reason.
-        with patch('routeros.api.iter', return_value=('!fatal', 'reason')):
+        with patch('routeros.utils.iter', return_value=('!fatal', 'reason')):
             with self.assertRaises(FatalError):
                 self.api.read_sentence()
             self.assertEqual(self.api.transport.close.call_count, 1)
