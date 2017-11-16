@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock, patch
+from mock import Mock, patch
 from collections import namedtuple
 from struct import pack
 from socket import SHUT_RDWR, error as SOCKET_ERROR
@@ -122,11 +122,6 @@ class TestWordUtils(unittest.TestCase):
         with self.assertRaises(UnicodeEncodeError):
             self.encoder('ASCII', word)
 
-    def test_utf_8_word_encoding(self):
-        # Assert that utf-8 encoding works.
-        expected_bytes = b'\x02\xc5\x82\xc4\x85'
-        self.assertEqual(self.encoder('utf-8', 'łą'), expected_bytes)
-
 
 class TestSentenceUtils(unittest.TestCase):
     def setUp(self):
@@ -149,12 +144,6 @@ class TestSentenceUtils(unittest.TestCase):
         sentence = b'\x12/ip/addres\xc5\x82/print\x05first\x06second'
         with self.assertRaises(UnicodeDecodeError):
             self.decoder('ASCII', sentence)
-
-    def test_decode_sentence_utf_8(self):
-        # Assert that utf-8 encoding works.
-        sentence = b'\x12/ip/addres\xc5\x82/print\x05first\x06second'
-        self.assertEqual(self.decoder('utf-8', sentence),
-                         ('/ip/addresł/print', 'first', 'second'))
 
 
 class TestAPI(unittest.TestCase):

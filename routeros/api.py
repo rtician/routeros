@@ -20,7 +20,7 @@ class Parser:
         Create a attribute word from key, value pair.
         Values are casted to api equivalents.
         '''
-        return '={}={}'.format(key, value)
+        return '={0}={1}'.format(key, value)
 
 
 class RouterOS(Parser):

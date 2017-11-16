@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from mock import patch
 from socket import error as SOCKET_ERROR, timeout as SOCKET_TIMEOUT
 
 from routeros import encode_password, create_transport, ConnectionError
