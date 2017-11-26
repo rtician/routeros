@@ -1,4 +1,4 @@
-#RouterOS
+# RouterOS
 [![Build Status](https://travis-ci.org/rtician/routeros.svg?branch=master)](https://travis-ci.org/rtician/routeros)
 
 RouterOS is a API client for Mikrotik RouterOS.
@@ -10,39 +10,43 @@ $ pip install routeros
 The usage of a virtualenv is recommended.
 
 ### How to use it?
-```
-from routeros import login
+```python
+In [1]: from routeros import login
 
-routeros = login('user', 'password', 'host')
-routeros.talk('/interface/print')
+In [2]: routeros = login('user', 'password', '10.1.0.1')
 
-{u'.id': u'*6',
-  u'actual-mtu': u'1500',
-  u'default-name': u'wlan1',
-  u'disabled': u'false',
-  u'fast-path': u'true',
-  u'fp-rx-byte': u'461972',
-  u'fp-rx-packet': u'3742',
-  u'fp-tx-byte': u'0',
-  u'fp-tx-packet': u'0',
-  u'l2mtu': u'1600',
-  u'last-link-down-time': u'nov/16/2017 00:00:00',
-  u'last-link-up-time': u'nov/16/2017 00:00:00',
-  u'link-downs': u'12',
-  u'mac-address': u'00:00:00:00:00:00',
-  u'max-l2mtu': u'2290',
-  u'mtu': u'1500',
-  u'name': u'wlan1',
-  u'running': u'false',
-  u'rx-byte': u'461972',
-  u'rx-drop': u'0',
-  u'rx-error': u'0',
-  u'rx-packet': u'3742',
-  u'tx-byte': u'3728276',
-  u'tx-drop': u'0',
-  u'tx-error': u'0',
-  u'tx-packet': u'3869',
-  u'tx-queue-drop': u'0',
-  u'type': u'wlan'})
+In [3]: routeros('/ip/pool/print')
+Out[3]: 
+({'.id': '*1', 'name': 'dhcp', 'ranges': '192.168.88.10-192.168.88.254'},
+ {'.id': '*2', 'name': 'hs-pool-8', 'ranges': '10.5.50.2-10.5.50.254'})
+
+In [4]: routeros.close()
+
+In [5]: 
+
 ```
 
+### Also can use query
+Query can consult specific attributes on routeros.
+
+**Methods:**
+
+> - query.has(*args)
+> - query.hasnot(*args)
+> - query.equal(**kwargs)
+> - query.lower(**kwargs)
+> - query.greater(**kwargs)
+
+```python
+In [1]: from routeros import login
+
+In [2]: routeros = login('user', 'password', '10.1.0.1')
+
+In [3]: routeros.query('/ip/pool/print').equal(name='dhcp')
+Out[3]: ({'.id': '*1', 'name': 'dhcp', 'ranges': '192.168.88.10-192.168.88.254'},)
+
+In [4]: routeros.close()
+
+In [5]: 
+
+```
