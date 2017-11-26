@@ -5,7 +5,7 @@ from routeros.api import Query, Parser
 
 class MockedAPI:
     def __call__(self, command, *words):
-        return [command, *words]
+        return [command] + [word for word in words]
 
 
 class TestQuery(unittest.TestCase):
@@ -29,6 +29,7 @@ class TestQuery(unittest.TestCase):
 
         expected_greater = [self.command, '?>foo=bar', '?>bar=foo']
         self.assertEqual(self.query.greater(foo='bar', bar='foo'), expected_greater)
+
 
 class TestParser(unittest.TestCase):
     def setUp(self):
