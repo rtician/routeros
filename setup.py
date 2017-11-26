@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name='routeros',
   packages=['routeros'],
-  version='1.0',
+  version='0.1',
   description='Implementation of Mikrotik API',
   license='MIT',
   author='Ramiro Tician',
