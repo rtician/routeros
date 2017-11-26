@@ -23,10 +23,10 @@ def login(username, password, host, port=8728):
     routeros = RouterOS(protocol=protocol)
 
     try:
-        sentence = routeros.talk('/login')
+        sentence = routeros('/login')
         token = sentence[0]['ret']
         encoded = encode_password(token, password)
-        routeros.talk('/login', **{'name': username, 'response': encoded})
+        routeros('/login', **{'name': username, 'response': encoded})
     except (ConnectionError, TrapError, FatalError):
         transport.close()
         raise

@@ -23,21 +23,52 @@ class Parser:
         return '={0}={1}'.format(key, value)
 
 
-class RouterOS(Parser):
+class Query:
+    def __init__(self, api, command):
+        self.api = api
+        self.command = command
 
+    def has(self, *args):
+        words = ['?{0}'.format(arg) for arg in args]
+        return self.api(self.command, *words)
+
+    def hasnot(self, *args):
+        words = ['?-{0}'.format(arg) for arg in args]
+        return self.api(self.command, *words)
+
+    def equal(self, **kwargs):
+        words = ['?={0}={1}'.format(key, value) for key, value in kwargs.items()]
+        return self.api(self.command, *words)
+
+    def lower(self, **kwargs):
+        words = ['?<{0}={1}'.format(key, value) for key, value in kwargs.items()]
+        return self.api(self.command, *words)
+
+    def greater(self, **kwargs):
+        words = ['?>{0}={1}'.format(key, value) for key, value in kwargs.items()]
+        return self.api(self.command, *words)
+
+
+class RouterOS(Parser):
     def __init__(self, protocol):
         self.protocol = protocol
 
-    def talk(self, command, **kwargs):
+    def __call__(self, command, *args, **kwargs):
         """
         Call Api with given command.
 
         :param command: Command word. eg. /ip/address/print
+        :param args: List with optional arguments, most used for query commands.
         :param kwargs: Dictionary with optional arguments.
         """
-        words = tuple(self.compose_word(key, value) for key, value in kwargs.items())
-        self.protocol.write_sentence(command, *words)
+        if kwargs:
+            args = tuple(self.compose_word(key, value) for key, value in kwargs.items())
+
+        self.protocol.write_sentence(command, *args)
         return self._read_response()
+
+    def query(self, command):
+        return Query(self, command)
 
     def _read_sentence(self):
         """
@@ -54,7 +85,6 @@ class RouterOS(Parser):
         Read until !done is received.
 
         :throws TrapError: If one !trap is received.
-        :throws MultiTrapError: If > 1 !trap is received.
         :returns: Full response
         """
         response = []
