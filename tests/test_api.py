@@ -16,19 +16,19 @@ class TestQuery(unittest.TestCase):
 
     def test_query(self):
         expected_equal = [self.command, '?=foo=bar', '?=bar=foo']
-        self.assertEqual(self.query.equal(foo='bar', bar='foo'), expected_equal)
+        self.assertCountEqual(self.query.equal(foo='bar', bar='foo'), expected_equal)
 
         expected_has = [self.command, '?foo', '?bar']
-        self.assertEqual(self.query.has('foo', 'bar'), expected_has)
+        self.assertCountEqual(self.query.has('foo', 'bar'), expected_has)
 
         expected_hasnot = [self.command, '?-foo', '?-bar']
-        self.assertEqual(self.query.hasnot('foo', 'bar'), expected_hasnot)
+        self.assertCountEqual(self.query.hasnot('foo', 'bar'), expected_hasnot)
 
         expected_lower = [self.command, '?<foo=bar', '?<bar=foo']
-        self.assertEqual(self.query.lower(foo='bar', bar='foo'), expected_lower)
+        self.assertCountEqual(self.query.lower(foo='bar', bar='foo'), expected_lower)
 
         expected_greater = [self.command, '?>foo=bar', '?>bar=foo']
-        self.assertEqual(self.query.greater(foo='bar', bar='foo'), expected_greater)
+        self.assertCountEqual(self.query.greater(foo='bar', bar='foo'), expected_greater)
 
 
 class TestParser(unittest.TestCase):
