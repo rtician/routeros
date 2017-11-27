@@ -15,20 +15,26 @@ class TestQuery(unittest.TestCase):
         self.query = Query(self.api, self.command)
 
     def test_query(self):
-        expected_equal = [self.command, '?=foo=bar', '?=bar=foo']
-        self.assertCountEqual(self.query.equal(foo='bar', bar='foo'), expected_equal)
+        # We don't need the attributes in order.
+        expected_equal = sorted([self.command, '?=foo=bar', '?=bar=foo'])
+        self.assertEqual(self.query.equal(foo='bar', bar='foo')[0], self.command)
+        self.assertEqual(sorted(self.query.equal(foo='bar', bar='foo')), expected_equal)
 
-        expected_has = [self.command, '?foo', '?bar']
-        self.assertCountEqual(self.query.has('foo', 'bar'), expected_has)
+        expected_has = sorted([self.command, '?foo', '?bar'])
+        self.assertEqual(self.query.equal(foo='bar', bar='foo')[0], self.command)
+        self.assertEqual(sorted(self.query.has('foo', 'bar')), expected_has)
 
-        expected_hasnot = [self.command, '?-foo', '?-bar']
-        self.assertCountEqual(self.query.hasnot('foo', 'bar'), expected_hasnot)
+        expected_hasnot = sorted([self.command, '?-foo', '?-bar'])
+        self.assertEqual(self.query.equal(foo='bar', bar='foo')[0], self.command)
+        self.assertEqual(sorted(self.query.hasnot('foo', 'bar')), expected_hasnot)
 
-        expected_lower = [self.command, '?<foo=bar', '?<bar=foo']
-        self.assertCountEqual(self.query.lower(foo='bar', bar='foo'), expected_lower)
+        expected_lower = sorted([self.command, '?<foo=bar', '?<bar=foo'])
+        self.assertEqual(self.query.equal(foo='bar', bar='foo')[0], self.command)
+        self.assertEqual(sorted(self.query.lower(foo='bar', bar='foo')), expected_lower)
 
-        expected_greater = [self.command, '?>foo=bar', '?>bar=foo']
-        self.assertCountEqual(self.query.greater(foo='bar', bar='foo'), expected_greater)
+        expected_greater = sorted([self.command, '?>foo=bar', '?>bar=foo'])
+        self.assertEqual(self.query.equal(foo='bar', bar='foo')[0], self.command)
+        self.assertEqual(sorted(self.query.greater(foo='bar', bar='foo')), expected_greater)
 
 
 class TestParser(unittest.TestCase):
