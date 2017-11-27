@@ -2,13 +2,13 @@ from distutils.core import setup
 setup(
   name='routeros',
   packages=['routeros'],
-  version='0.1',
+  version='1.1',
   description='Implementation of Mikrotik API',
   license='MIT',
   author='Ramiro Tician',
   author_email='ramirotician@gmail.com',
   url='https://github.com/rtician/routeros',
-  download_url='https://github.com/rtician/routeros/archive/v0.1.tar.gz',
+  download_url='https://github.com/rtician/routeros/archive/v1.1.tar.gz',
   keywords=['mikrotik', 'routeros', 'api'],
   classifiers=[
       'Development Status :: 5 - Production/Stable',
