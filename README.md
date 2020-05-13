@@ -52,9 +52,13 @@ In [5]:
 ```
 
 ### How to use non-default (8728) API port for login, such as 9999
- 
+
+```python
 routeros = login('user', 'password', '10.1.0.1', 9999)
+```
 
 ### How to use pre-v6.43 login method
 
+```python
 routeros = login('user', 'password', '10.1.0.1', 8728, True)
+```
