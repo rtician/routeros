@@ -8,7 +8,7 @@ from routeros.utils import API, Socket
 from routeros.api import RouterOS
 
 
-def login(username, password, host, port=8728):
+def login(username, password, host, port=8728, use_old_login_method=False):
     """
     Connect and login to routeros device.
     Upon success return a RouterOS class.
@@ -23,10 +23,13 @@ def login(username, password, host, port=8728):
     routeros = RouterOS(protocol=protocol)
 
     try:
-        sentence = routeros('/login')
-        token = sentence[0]['ret']
-        encoded = encode_password(token, password)
-        routeros('/login', **{'name': username, 'response': encoded})
+        if use_old_login_method:                # Login method pre-v6.43
+            sentence = routeros('/login')
+            token = sentence[0]['ret']
+            encoded = encode_password(token, password)
+            routeros('/login', **{'name': username, 'response': encoded})
+        else:                                   # Login method post-v6.43
+            routeros('/login', **{'name': username, 'password': password})
     except (ConnectionError, TrapError, FatalError):
         transport.close()
         raise
