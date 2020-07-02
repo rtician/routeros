@@ -1,5 +1,5 @@
 import unittest
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 from collections import namedtuple
 from struct import pack
 from socket import SHUT_RDWR, error as SOCKET_ERROR

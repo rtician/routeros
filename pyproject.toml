@@ -22,6 +22,7 @@ python = ">=2.7"
 [tool.poetry.dev-dependencies]
 pytest = "^4.6.11"
 ipdb = "^0.13.3"
+nose = "^1.3.7"
 
 [build-system]
 requires = ["poetry>=0.12"]
