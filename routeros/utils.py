@@ -28,15 +28,20 @@ class Socket:
         :param length: length to read on socket.
         :return: data (string) received from socket.
         """
-        try:
-            data = self.sock.recv(length)
-            if not data:
-                raise ConnectionError('Connection was closed.')
-            return data
-        except SOCKET_TIMEOUT as exc:
-            raise ConnectionError('Socket timed out. ' + str(exc))
-        except SOCKET_ERROR as exc:
-            raise ConnectionError('Failed to read from socket. {0}'.format(exc))
+        data = b''
+        while length > 0:
+            try:
+                read = self.sock.recv(length)
+                if not read:
+                    raise ConnectionError('Connection was closed.')
+                length -= len(read)
+                data += read
+            except SOCKET_TIMEOUT as exc:
+                raise ConnectionError('Socket timed out. ' + str(exc))
+            except SOCKET_ERROR as exc:
+                raise ConnectionError('Failed to read from socket. {0}'.format(exc))
+
+        return data
 
     def close(self):
         """
